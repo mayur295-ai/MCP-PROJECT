@@ -1,0 +1,7 @@
+mcp
+openai
+python-dotenv
+requests
+uvicorn
+starlette
+sse_starlette
