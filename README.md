@@ -1,56 +1,125 @@
-# Model Context Protocol (MCP) Setup
+# MCP-PROJECT 🤖
 
-This is a complete, minimal, production-quality project demonstrating the execution of tools via Model Context Protocol (MCP) using an LLM to dynamically decide and execute reasoning.
+**Minimal, production-quality MCP agent with LLM-driven tool calling via OpenRouter.**
 
-## 🔄 Project Flow
-User input → LLM → tool selection → MCP call → MCP server tool execution → tool response → final LLM response → terminal output
+Demonstrates the full Model Context Protocol flow: LLM decides which tool to call → forwards to MCP server → executes → returns final response.
 
-## 📁 Files
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![MCP](https://img.shields.io/badge/MCP-Model_Context_Protocol-6B21A8)
+![OpenRouter](https://img.shields.io/badge/LLM-OpenRouter-FF6B35)
+![AsyncIO](https://img.shields.io/badge/Async-AsyncIO-00BFFF)
 
-- `server.py`: The MCP server that registers and exposes Python tools via SSE transport.
-- `client.py`: The client that uses the OpenRouter LLM to dynamically invoke tools from the MCP server.
-- `.env`: A private file storing the required LLM API key.
-- `requirements.txt`: The required dependencies for the project.
+---
 
-## 🛠️ Setup Instructions
+## How It Works
 
-1. **Install dependencies**. Make sure you are using Python 3.10+, create a virtual environment, and install the libraries:
-   ```bash
-   pip install -r requirements.txt
-   ```
+```
+You (terminal input)
+        │
+        ▼
+┌───────────────────┐
+│    client.py      │  ← sends prompt + tool schemas to LLM via OpenRouter
+│  (OpenRouter LLM) │
+└────────┬──────────┘
+         │  LLM decides: "I need tool X with args Y"
+         ▼
+┌───────────────────┐
+│    server.py      │  ← MCP server exposes registered Python tools via SSE
+│  (MCP Server)     │
+└────────┬──────────┘
+         │  tool executes, returns result
+         ▼
+┌───────────────────┐
+│    client.py      │  ← sends tool result back to LLM for final response
+└───────────────────┘
+         │
+         ▼
+  Terminal output
+```
 
-2. **Verify your API key**. The `.env` file contains your OpenRouter API Key.
+---
 
-## 🚀 Running the Project
+## Quickstart
 
-You will need **two terminal tabs/windows** to run the system.
+```bash
+git clone https://github.com/mayur295-ai/MCP-PROJECT
+cd MCP-PROJECT
+pip install -r requirements.txt
+# Add your OpenRouter API key to .env
+```
 
-**Terminal 1: Start the MCP Server**
+**Terminal 1 — start the MCP server:**
 ```bash
 python server.py
 ```
-> Let this run. It powers the external MCP server locally.
 
-**Terminal 2: Start the Client**
+**Terminal 2 — start the client:**
 ```bash
 python client.py
 ```
-> The client will connect to the server, discover tools, and wait for your input.
 
-## 🧪 Example Queries to Try
+---
 
-When you see the `You: ` prompt in the client, test the system by typing these exact commands:
-- *"add 5 and 3"*
-- *"multiply 4 and 6"*
-- *"greet Mayuresh"*
+## Example Session
 
-You will see the console log tracking the execution exactly when the model realizes it needs a tool, forwards the query to the MCP Server, invokes the correct logic, and returns your final output.
+```
+You: add 5 and 3
+[LLM → tool: add(5, 3) → MCP server → result: 8]
+Agent: The result is 8.
 
-## ⚙️ Tech Stack
-- Python
-- Model Context Protocol (MCP)
-- OpenRouter (LLM)
-- AsyncIO
+You: multiply 4 and 6
+[LLM → tool: multiply(4, 6) → MCP server → result: 24]
+Agent: 4 multiplied by 6 equals 24.
 
-## 🎯 Purpose
-This project demonstrates how LLMs can dynamically decide and execute external tools using MCP.
+You: greet Mayuresh
+[LLM → tool: greet("Mayuresh") → MCP server → result: "Hello, Mayuresh!"]
+Agent: Hello, Mayuresh!
+```
+
+---
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `server.py` | MCP server — registers and exposes tools via SSE transport |
+| `client.py` | MCP client — connects LLM to server, handles tool call loop |
+| `requirements.txt` | Dependencies |
+| `.env` | API key (not committed) |
+
+---
+
+## Stack
+
+- **Python 3.10+**
+- **Model Context Protocol (MCP)** — tool registration and SSE transport
+- **OpenRouter** — LLM API (swap model via config)
+- **AsyncIO** — non-blocking client/server communication
+
+---
+
+## Extending — Add Your Own Tools
+
+In `server.py`, register a new tool:
+
+```python
+@mcp.tool()
+def square(n: int) -> int:
+    """Return the square of a number."""
+    return n * n
+```
+
+Restart the server. The LLM will automatically discover and use it.
+
+---
+
+## Part of AURA_OS
+
+This project explores the MCP protocol as a tool-dispatch layer for AURA_OS.
+More complex agents with memory and edge inference are in:
+- [ai-agent-memory](https://github.com/mayur295-ai/ai-agent-memory)
+- [edge-ai-inference](https://github.com/mayur295-ai/edge-ai-inference)
+
+---
+
+*Built by [Mayuresh Chougule](https://github.com/mayur295-ai)*
